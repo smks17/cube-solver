@@ -2,7 +2,6 @@ from typing import List
 from sim import Simulator
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class Graphics:
@@ -48,14 +47,14 @@ class Graphics:
                 show_connections: bool = False,
                 show_stickies: bool = False,
                 show_ids: bool = False) -> None:
-        coords = [[x, y, z] for x, y, z in env.coords]
-        stickies = [[p1, p2] for p1, p2 in env.sticky_cubes]
+        coords = np.array([[x, y, z] for x, y, z in env.coords])
+        stickies = np.array([[p1, p2] for p1, p2 in env.sticky_cubes])
         shifter = 1
         alpha = 0.1
 
-        min_x, max_x = min(x[0] for x in coords), max(x[0] for x in coords)
-        min_y, max_y = min(y[1] for y in coords), max(y[1] for y in coords)
-        min_z, max_z = min(z[2] for z in coords), max(z[2] for z in coords)
+        min_cord, max_cord = coords.min(0), coords.max(0)
+        min_x, min_y, min_z = min_cord
+        max_x, max_y, max_z = max_cord
 
         len_x, len_y, len_z = (max_x - min_x) + (2 * shifter) + 1, \
                               (max_y - min_y) + (2 * shifter) + 1, \
