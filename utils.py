@@ -1,6 +1,4 @@
-from dataclasses import dataclass
-from enum import IntEnum, auto, Enum
-from typing import Tuple
+from enum import IntEnum
 
 
 class Rotation(IntEnum):
@@ -9,19 +7,7 @@ class Rotation(IntEnum):
     D180 = 180
 
 
-class ConnectionType(Enum):
-    STICKY = auto()
-    NORMAL = auto()
-
-
-@dataclass()
-class Piece:
-    id: int
-    coordinates: Tuple
-
-
-@dataclass
-class Connection:
-    prev: int
-    to: int
-    connection_type: ConnectionType
+class Axis(IntEnum):
+    X = 0
+    Y = 1
+    Z = 2
