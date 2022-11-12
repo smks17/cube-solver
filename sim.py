@@ -1,3 +1,5 @@
+from math import sqrt
+from os import stat
 from typing import List
 from utils import Rotation, Axis
 
@@ -103,4 +105,67 @@ class Simulator:
 
 
 class Interface:
-    pass
+    def __init__(self):
+        pass
+
+    def evolve(self,
+               state: Simulator,
+               cube_id: int,
+               alpha: Rotation,
+               axis: Axis) -> None:
+        self.check_valid_action(state, cube_id, alpha, axis)
+        state.take_action(cube_id, alpha, axis)
+
+    def copy_state(self, state: Simulator):
+        _copy = Simulator(None,None)
+        _copy.coords = state.coords
+        _copy.sticky_cubes = state.sticky_cubes
+        return _copy
+
+    def update_coords(self, state: Simulator, new_coords: List[List[int]]) -> bool:
+        if self.check_valid_state(state):
+            stat.coords = new_coords
+            return True
+        return False
+
+    def goal_test(self, state: Simulator):
+        coords = state.coords
+        sorted_cords = sorted(coords , key=lambda k: [k[0], k[1], k[2]])
+        min_coord = sorted_cords[0]
+        index = 0
+        for delta_x in range(3):
+            for delta_y in range(3):
+                for delta_z in range(3):
+                    if ((min_coord[0] + delta_x) != sorted_cords[index][0]
+                        or (min_coord[1] + delta_y) != sorted_cords[index][1]
+                        or (min_coord[2] + delta_z) != sorted_cords[index][2]
+                    ):
+                        return False
+                    index += 1
+        return True
+
+    def check_valid_action(self, state, cube_id, alpha, axis):
+        # check cube_id
+        if 1 > cube_id and cube_id > len(state.coords):
+            raise("cube number is not valid")
+        # check alpha
+        if isinstance(alpha, Rotation): raise("bad type for alpha")
+        if alpha not in list(Rotation): raise("alpha is not valid")
+        # check axis
+        if isinstance(axis, Axis): raise("bad type for axis")
+        if axis not in list(Axis): raise("axis is not valid")
+
+    def check_valid_state(self, state: Simulator):
+        # check not to be two cube in a same coordinate
+        if state.coords != list(set(state.coords)):
+            return False
+        # check all coords next to each others
+        for i in range(len(state.coords) - 1):
+            this_coord = stat.coords[i]
+            next_coord = stat.coords[i+1]
+            distance = sqrt(pow(next_coord[0] - this_coord[0], 2)
+                          + pow(next_coord[1] - this_coord[1], 2)
+                          + pow(next_coord[2] - this_coord[2], 2))
+            if distance != 1:
+                return False
+            return True
