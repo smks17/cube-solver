@@ -32,7 +32,7 @@ def joint_axis(coords: List, id1: int, id2: int) -> Axis:
     if coords[id1][1] != coords[id2][1]:
         return Axis.Y
     if coords[id1][2] != coords[id2][2]:
-        return Axis.X
+        return Axis.Z
     raise "given cubes have the same coordinates."
 
 

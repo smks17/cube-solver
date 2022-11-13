@@ -58,9 +58,14 @@ class Simulator:
                 return
 
             if stuck_next and stuck_prev:
-                target_cube = cube_id + 1
-                while [target_cube, target_cube + 1] in self.sticky_cubes:
-                    target_cube += 1
+                if not self._changed_alpha:
+                    target_cube = cube_id + 1
+                    while [target_cube, target_cube + 1] in self.sticky_cubes:
+                        target_cube += 1
+                else:
+                    target_cube = cube_id - 1
+                    while [target_cube - 1, target_cube] in self.sticky_cubes:
+                        target_cube -= 1
 
                 if is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1):
                     return
@@ -74,31 +79,27 @@ class Simulator:
                     ([target_cube, target_cube + 1] not in self.sticky_cubes)
                 ):
                     return
-                return self.take_action(cube_id + 1, alpha, axis)
+                return self.take_action(target_cube, alpha, axis)
 
-            # if stuck_prev:
-            #     target_cube = cube_id + 1
-            #     if (
-            #             is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1) and
-            #             ([target_cube, target_cube + 1] not in self.sticky_cubes)
-            #     ):
-            #     if alpha == Rotation.POS90 or alpha == Rotation.NEG90:
-            #         if not self._changed_alpha:
-            #             alpha = alpha * -1
-            #             self._changed_alpha = True
-            #     return self.take_action(cube_id - 1, alpha, axis)
+            if stuck_prev:
+                target_cube = cube_id - 1
+                if (
+                        is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1) and
+                        ([target_cube - 1, target_cube] not in self.sticky_cubes)
+                ):
+                    return
+                if not self._changed_alpha:
+                    self._changed_alpha = True
+                return self.take_action(target_cube, alpha, axis)
         else:
             if stuck_prev and stuck_next:
                 return
             else:
-                if end - cube_id < cube_id:
-                    return self._change_coordinates(cube_id + 1, end, alpha, axis, cube_id)
-                else:
-                    if alpha == Rotation.POS90 or alpha == Rotation.NEG90:
-                        if not self._changed_alpha:
-                            alpha = alpha * -1
-                            self._changed_alpha = True
+                if self.coords[cube_id][axis] != self.coords[cube_id + 1][axis]:
                     return self._change_coordinates(start, cube_id - 1, alpha, axis, cube_id)
+                if self.coords[cube_id - 1][axis] != self.coords[cube_id][axis]:
+                    return self._change_coordinates(cube_id + 1, end, alpha, axis, cube_id)
+                raise "given axis is not compatible with given rotation"
 
 
 class Interface:
@@ -176,20 +177,34 @@ class Interface:
     def get_possible_actions(state: Simulator) -> List:
         action_list = []
         for cube_id in range(1, len(state.coords) - 2):
-            for rotation in list(Rotation):
+            for rotation in [Rotation.POS90]:
                 if is_horizontal(state.coords, cube_id - 1, cube_id, cube_id + 1):
-                    stuck_next, stuck_prev = stuck_to(state.sticky_cubes, cube_id)
-                    if (stuck_prev or stuck_next) and not (stuck_next and stuck_prev):
-                        axis = joint_axis(state.coords, cube_id - 1, cube_id)
-                        res = [cube_id, rotation, axis]
-                        if res not in action_list:
-                            action_list.append(res)
+                    # stuck_next, stuck_prev = stuck_to(state.sticky_cubes, cube_id)
+                    # if (stuck_prev or stuck_next) and not (stuck_next and stuck_prev):
+                    #     axis = joint_axis(state.coords, cube_id - 1, cube_id)
+                    #     res = [cube_id, rotation, axis]
+                    #     if res not in action_list:
+                    #         action_list.append(res)
                     continue
                 else:
+                    stuck_next, stuck_prev = stuck_to(state.sticky_cubes, cube_id)
+                    if stuck_prev and stuck_next:
+                        continue
+
                     prev_axis = joint_axis(state.coords, cube_id - 1, cube_id)
                     next_axis = joint_axis(state.coords, cube_id, cube_id + 1)
-                    for axis in list({prev_axis, next_axis}):
-                        res = [cube_id, rotation, axis]
+
+                    if stuck_next:
+                        res = [cube_id, rotation, next_axis]
                         if res not in action_list:
                             action_list.append(res)
+                    elif stuck_prev:
+                        res = [cube_id, rotation, prev_axis]
+                        if res not in action_list:
+                            action_list.append(res)
+                    else:
+                        for axis in list({prev_axis, next_axis}):
+                            res = [cube_id, rotation, axis]
+                            if res not in action_list:
+                                action_list.append(res)
         return action_list
