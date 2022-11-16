@@ -16,6 +16,7 @@ from utils import (
     TRANSFORM_MATRIX_Z
 )
 
+
 class Simulator:
     def __init__(self, coordinates: List, sticky_cubes: List) -> None:
         self.coords = np.array(coordinates)
@@ -28,14 +29,14 @@ class Simulator:
                             alpha: Rotation,
                             axis: Axis,
                             center_id: int) -> None:
-        delta_coords = self.coords[start_id: end_id+1,] - self.coords[center_id]
+        delta_coords = self.coords[start_id: end_id + 1, ] - self.coords[center_id]
         if axis == Axis.Z:
             transform_matrix = TRANSFORM_MATRIX_X[alpha.name]
         elif axis == Axis.X:
             transform_matrix = TRANSFORM_MATRIX_Y[alpha.name]
         elif axis == Axis.Y:
             transform_matrix = TRANSFORM_MATRIX_Z[alpha.name]
-        self.coords[start_id: end_id+1,] = \
+        self.coords[start_id: end_id + 1, ] = \
             self.coords[center_id] + (transform_matrix @ delta_coords.T).T
 
     def take_action(self, cube_id: int, alpha: Rotation, axis: Axis) -> None:
@@ -68,8 +69,8 @@ class Simulator:
             if stuck_next:
                 target_cube = cube_id + 1
                 if (
-                    is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1) and
-                    ([target_cube, target_cube + 1] not in self.sticky_cubes)
+                        is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1) and
+                        ([target_cube, target_cube + 1] not in self.sticky_cubes)
                 ):
                     return
                 return self.take_action(target_cube, alpha, axis)
@@ -100,6 +101,7 @@ class Simulator:
 
     def __hash__(self) -> int:
         return hash(self.coords.tobytes())
+
 
 class Interface:
     def __init__(self):
