@@ -1,12 +1,24 @@
 import json
 from copy import deepcopy
 from typing import List
-from utils import Rotation, Axis, is_horizontal, joint_axis, stuck_to
 
+import numpy as np
+from sklearn.decomposition import PCA
+
+from utils import (
+    Rotation,
+    Axis,
+    is_horizontal,
+    joint_axis,
+    stuck_to,
+    TRANSFORM_MATRIX_X,
+    TRANSFORM_MATRIX_Y,
+    TRANSFORM_MATRIX_Z
+)
 
 class Simulator:
     def __init__(self, coordinates: List, sticky_cubes: List) -> None:
-        self.coords = coordinates
+        self.coords = np.array(coordinates)
         self.sticky_cubes = sticky_cubes
         self._changed_alpha = False
 
@@ -16,34 +28,15 @@ class Simulator:
                             alpha: Rotation,
                             axis: Axis,
                             center_id: int) -> None:
-        x_center, y_center, z_center = self.coords[center_id]
-        for i in range(start_id, end_id + 1):
-            x, y, z = self.coords[i]
-            delta_x, delta_y, delta_z = x - x_center, y - y_center, z - z_center
-
-            if alpha == Rotation.POS90:
-                if axis == Axis.X:
-                    self.coords[i] = [x_center + delta_x, y_center + delta_z, z_center + delta_y]
-                if axis == Axis.Y:
-                    self.coords[i] = [x_center + delta_z, y_center + delta_y, z_center + delta_x]
-                if axis == Axis.Z:
-                    self.coords[i] = [x_center + delta_y, y_center + delta_x, z_center + delta_z]
-
-            if alpha == Rotation.NEG90:
-                if axis == Axis.X:
-                    self.coords[i] = [x_center + delta_x, y_center + delta_z, z_center - delta_y]
-                if axis == Axis.Y:
-                    self.coords[i] = [x_center - delta_z, y_center + delta_y, z_center + delta_x]
-                if axis == Axis.Z:
-                    self.coords[i] = [x_center + delta_y, y_center - delta_x, z_center + delta_z]
-
-            if alpha == Rotation.D180:
-                if axis == Axis.X:
-                    self.coords[i] = [x_center + delta_x, y_center - delta_y, z_center - delta_z]
-                if axis == Axis.Y:
-                    self.coords[i] = [x_center - delta_x, y_center + delta_y, z_center - delta_z]
-                if axis == Axis.Z:
-                    self.coords[i] = [x_center - delta_x, y_center - delta_y, z_center + delta_z]
+        delta_coords = self.coords[start_id: end_id+1,] - self.coords[center_id]
+        if axis == Axis.Z:
+            transform_matrix = TRANSFORM_MATRIX_X[alpha.name]
+        elif axis == Axis.X:
+            transform_matrix = TRANSFORM_MATRIX_Y[alpha.name]
+        elif axis == Axis.Y:
+            transform_matrix = TRANSFORM_MATRIX_Z[alpha.name]
+        self.coords[start_id: end_id+1,] = \
+            self.coords[center_id] + (transform_matrix @ delta_coords.T).T
 
     def take_action(self, cube_id: int, alpha: Rotation, axis: Axis) -> None:
         start, end = 0, len(self.coords) - 1
@@ -101,6 +94,12 @@ class Simulator:
                     return self._change_coordinates(cube_id + 1, end, alpha, axis, cube_id)
                 raise "given axis is not compatible with given rotation"
 
+    def __eq__(self, __o: object) -> bool:
+        return np.all(
+            PCA().fit_transform(self.coords) == PCA().fit_transform(__o.coords))
+
+    def __hash__(self) -> int:
+        return hash(self.coords.tobytes())
 
 class Interface:
     def __init__(self):
@@ -126,7 +125,7 @@ class Interface:
         """Returns what agent will see in a given state as a json."""
 
         return json.dumps({
-            "Coordinates": state.coords,
+            "Coordinates": state.coords.tolist(),
             "sticky_cubes": state.sticky_cubes
         })
 

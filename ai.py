@@ -30,7 +30,7 @@ class Agent:
         interface = Interface()
         q = [[root_game, []]]
 
-        buffer_states = [q[0][0].coords]
+        buffer_states = {q[0][0]}
         while q:
             node = q.pop(0)
 
@@ -40,8 +40,8 @@ class Agent:
             for action in actions_list:
                 child_state = interface.copy_state(node[0])
                 interface.evolve(child_state, action[0], action[1], action[2])
-                if interface.check_valid_state(child_state) and child_state.coords not in buffer_states:
-                    buffer_states.append(child_state.coords)
+                if interface.check_valid_state(child_state) and child_state not in buffer_states:
+                    buffer_states.add(child_state)
                     q.append([child_state, [action] + node[1]])
 
                     if interface.goal_test(child_state):

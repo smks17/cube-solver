@@ -1,11 +1,35 @@
-from enum import IntEnum
+from enum import IntEnum, Enum
 from typing import List, Tuple
+from math import pi, cos, sin
+
+import numpy as np
 
 
-class Rotation(IntEnum):
-    POS90 = 90
-    NEG90 = -90
-    D180 = 180
+class Rotation(float, Enum):
+    POS90 = pi/2
+    NEG90 = - pi/2
+    D180 = pi
+
+TRANSFORM_MATRIX_X = dict()
+TRANSFORM_MATRIX_Y = dict()
+TRANSFORM_MATRIX_Z = dict()
+
+for alpha in Rotation:
+    TRANSFORM_MATRIX_X[alpha.name] = np.array(
+        [[1, 0, 0],
+         [0, cos(alpha.value), sin(alpha.value)],
+         [0, sin(alpha.value), cos(alpha.value)]],
+        dtype=np.int64)
+    TRANSFORM_MATRIX_Y[alpha.name] = np.array(
+        [[cos(alpha.value), 0, sin(alpha.value)],
+         [0, 1, 0],
+         [sin(alpha.value), 0, cos(alpha.value)]],
+        dtype=np.int64)
+    TRANSFORM_MATRIX_Z[alpha.name] = np.array(
+        [[cos(alpha.value), sin(alpha.value), 0],
+         [sin(alpha.value), cos(alpha.value), 0],
+         [0, 0, 1]],
+        dtype=np.int64)
 
 
 class Axis(IntEnum):
