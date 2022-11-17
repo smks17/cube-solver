@@ -65,7 +65,7 @@ class Agent:
         interface = Interface()
         gui = Graphics()
 
-        interface.h(root_game)
+        interface.h2(root_game)
         open_list = {root_game}
         closed_list = set([])
 
@@ -78,19 +78,19 @@ class Agent:
             n = None
 
             for v in open_list:
-                if n is None or g[v] + v.h < g[n] + n.h:
+                if n is None or (g[v] + v.h < g[n] + n.h and g[v] < 30):
                     n = v
 
             counter += 1
             print(f"counter: {counter}, g: {g[n]}, h: {n.h}")
-            if counter % 500 == 0:
+            if counter % 100 == 0:
                 gui.display(n, True, True, True)
 
             if n is None:
                 print('Path does not exist!')
                 return None
 
-            if n.h == 0:  # goal state
+            if interface.goal_test(n):
                 reconst_path = []
 
                 while parents[n] != n:
@@ -113,7 +113,7 @@ class Agent:
                 if interface.check_valid_state(child_state):
                     if child_state not in open_list and child_state not in closed_list:
                         open_list.add(child_state)
-                        interface.h(child_state)
+                        interface.h2(child_state)
                         parents[child_state] = n
                         g[child_state] = g[n] + 1
                     else:
@@ -124,11 +124,11 @@ class Agent:
                             if child_state in closed_list:
                                 closed_list.remove(child_state)
                                 open_list.add(child_state)
-                                interface.h(child_state)
+                                interface.h2(child_state)
 
             open_list.remove(n)
             closed_list.add(n)
-            interface.h(n)
+            interface.h2(n)
 
         print('Path does not exist!')
         return None

@@ -14,7 +14,7 @@ from utils import (
     stuck_to,
     TRANSFORM_MATRIX_X,
     TRANSFORM_MATRIX_Y,
-    TRANSFORM_MATRIX_Z
+    TRANSFORM_MATRIX_Z,
 )
 
 
@@ -32,11 +32,11 @@ class Simulator:
                             axis: Axis,
                             center_id: int) -> None:
         delta_coords = self.coords[start_id: end_id + 1, ] - self.coords[center_id]
-        if axis == Axis.Z:
+        if axis == Axis.X:
             transform_matrix = TRANSFORM_MATRIX_X[alpha.name]
-        elif axis == Axis.X:
-            transform_matrix = TRANSFORM_MATRIX_Y[alpha.name]
         elif axis == Axis.Y:
+            transform_matrix = TRANSFORM_MATRIX_Y[alpha.name]
+        elif axis == Axis.Z:
             transform_matrix = TRANSFORM_MATRIX_Z[alpha.name]
         self.coords[start_id: end_id + 1, ] = \
             self.coords[center_id] + (transform_matrix @ delta_coords.T).T
@@ -98,8 +98,9 @@ class Simulator:
                 raise "given axis is not compatible with given rotation"
 
     def __eq__(self, __o: object) -> bool:
-        return np.all(
-            PCA().fit_transform(self.coords) == PCA().fit_transform(__o.coords))
+        mat1 = self.coords - self.coords[0]
+        mat2 = __o.coords - __o.coords[0]
+        return (PCA().fit_transform(mat1) == PCA().fit_transform(mat2)).all()
 
     def __hash__(self) -> int:
         return hash(self.coords.tobytes())
@@ -133,7 +134,7 @@ class Interface:
             "sticky_cubes": state.sticky_cubes
         })
 
-    def h(self, state: Simulator):
+    def h1(self, state: Simulator):
         sorted_coords = sorted(state.coords, key=lambda k: [k[0], k[1], k[2]])
         min_coord = sorted_coords[0]
         index = 0
@@ -151,7 +152,15 @@ class Interface:
                                 pow(y2 - y1, 2) +
                                 pow(z2 - z1, 2) * 1.0)
                     index += 1
-        state.h = res
+        return res
+
+    def h2(self, state: Simulator):
+        x_set = len(set([cube[0] for cube in state.coords]))
+        y_set = len(set([cube[1] for cube in state.coords]))
+        z_set = len(set([cube[2] for cube in state.coords]))
+
+        res = abs(x_set + y_set + z_set - 9)
+        state.h = res * 100 * self.h1(state)
 
     @staticmethod
     def goal_test(state: Simulator) -> bool:
@@ -200,7 +209,7 @@ class Interface:
     def get_possible_actions(state: Simulator) -> List:
         action_list = []
         for cube_id in range(1, len(state.coords) - 2):
-            for rotation in [Rotation.POS90]:
+            for rotation in list(Rotation):
                 if is_horizontal(state.coords, cube_id - 1, cube_id, cube_id + 1):
                     # stuck_next, stuck_prev = stuck_to(state.sticky_cubes, cube_id)
                     # if (stuck_prev or stuck_next) and not (stuck_next and stuck_prev):
