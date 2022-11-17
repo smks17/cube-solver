@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from math import sqrt
 from typing import List
 
 import numpy as np
@@ -22,6 +23,7 @@ class Simulator:
         self.coords = np.array(coordinates)
         self.sticky_cubes = sticky_cubes
         self._changed_alpha = False
+        self.h = None
 
     def _change_coordinates(self,
                             start_id: int,
@@ -130,6 +132,26 @@ class Interface:
             "Coordinates": state.coords.tolist(),
             "sticky_cubes": state.sticky_cubes
         })
+
+    def h(self, state: Simulator):
+        sorted_coords = sorted(state.coords, key=lambda k: [k[0], k[1], k[2]])
+        min_coord = sorted_coords[0]
+        index = 0
+        res = 0
+        for delta_x in range(3):
+            for delta_y in range(3):
+                for delta_z in range(3):
+                    x1, y1, z1 = (
+                        min_coord[0] + delta_x,
+                        min_coord[1] + delta_y,
+                        min_coord[2] + delta_z
+                    )
+                    x2, y2, z2 = sorted_coords[index]
+                    res += sqrt(pow(x2 - x1, 2) +
+                                pow(y2 - y1, 2) +
+                                pow(z2 - z1, 2) * 1.0)
+                    index += 1
+        state.h = res
 
     @staticmethod
     def goal_test(state: Simulator) -> bool:
