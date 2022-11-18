@@ -113,8 +113,8 @@ class Interface:
     def evolve(self,
                state: Simulator,
                cube_id: int,
-               alpha: Rotation,
-               axis: Axis) -> None:
+               axis: Axis,
+               alpha: Rotation) -> None:
         self.check_valid_action(state, cube_id, alpha, axis)
         state.take_action(cube_id, alpha, axis)
 
@@ -130,8 +130,8 @@ class Interface:
         """Returns what agent will see in a given state as a json."""
 
         return json.dumps({
-            "Coordinates": state.coords.tolist(),
-            "sticky_cubes": state.sticky_cubes
+            "coordinates": state.coords.tolist(),
+            "stick_together": state.sticky_cubes
         })
 
     def h1(self, state: Simulator):
@@ -200,10 +200,8 @@ class Interface:
     @staticmethod
     def check_valid_state(state: Simulator) -> bool:
         # check not to be two cube in a same coordinate
-        set_coords = set(tuple(x) for x in state.coords)
-        if len(set_coords) != len(state.coords):
-            return False
-        return True
+        axs = state.coords
+        return len(np.unique(axs, axis=0)) == len(axs)
 
     @staticmethod
     def get_possible_actions(state: Simulator) -> List:
@@ -227,16 +225,16 @@ class Interface:
                     next_axis = joint_axis(state.coords, cube_id, cube_id + 1)
 
                     if stuck_next:
-                        res = [cube_id, rotation, next_axis]
+                        res = [cube_id, next_axis, rotation]
                         if res not in action_list:
                             action_list.append(res)
                     elif stuck_prev:
-                        res = [cube_id, rotation, prev_axis]
+                        res = [cube_id, prev_axis, rotation]
                         if res not in action_list:
                             action_list.append(res)
                     else:
                         for axis in list({prev_axis, next_axis}):
-                            res = [cube_id, rotation, axis]
+                            res = [cube_id, axis, rotation]
                             if res not in action_list:
                                 action_list.append(res)
         return action_list

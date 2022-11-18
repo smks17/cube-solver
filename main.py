@@ -6,7 +6,8 @@ from samples import *
 
 
 def main():
-    game = Simulator(sample6["Coordinates"], sample6["sticky_cubes"])
+    with open(r"problem_set.txt", 'r') as fp: res=eval(fp.read())
+    game = Simulator(res[0]["coordinates"], res[0]["stick_together"])
     interface = Interface()
     agent = Agent()
     gui = Graphics()

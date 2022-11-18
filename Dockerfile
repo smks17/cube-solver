@@ -9,4 +9,4 @@ RUN pip install --quiet -r requirements.txt
 
 COPY . .
 
-CMD ["python", "main.py"]
+CMD ["python", "test.py"]

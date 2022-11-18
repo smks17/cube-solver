@@ -1,4 +1,3 @@
-import math
 import random
 from time import time
 from gui import Graphics
@@ -21,7 +20,7 @@ class Agent:
 
         if not self.predicted_actions:
             t0 = time()
-            initial_state = Simulator(sensor_data['Coordinates'], sensor_data['sticky_cubes'])
+            initial_state = Simulator(sensor_data['coordinates'], sensor_data['stick_together'])
             self.predicted_actions = alg(initial_state)
             print("run time:", time() - t0)
 
@@ -71,7 +70,7 @@ class Agent:
 
         g = {root_game: 0}
 
-        parents = {root_game: root_game}
+        parents = {root_game: (root_game, None)}
 
         counter = 0
         while len(open_list) > 0:
@@ -91,17 +90,15 @@ class Agent:
                 return None
 
             if interface.goal_test(n):
-                reconst_path = []
+                reconst_actions = []
+                gui.display(n, True, True, True)
 
-                while parents[n] != n:
-                    reconst_path.append(n)
-                    n = parents[n]
+                while parents[n][0] != n:
+                    n, action = parents[n]
+                    reconst_actions.append(action)
 
-                reconst_path.append(root_game)
-                reconst_path.reverse()
-
-                print('Path found: {}'.format(reconst_path))
-                return reconst_path
+                print('Path found: {}'.format(reconst_actions))
+                return reconst_actions
 
             actions_list = interface.get_possible_actions(n)
             random.shuffle(actions_list)
@@ -114,12 +111,12 @@ class Agent:
                     if child_state not in open_list and child_state not in closed_list:
                         open_list.add(child_state)
                         interface.h2(child_state)
-                        parents[child_state] = n
+                        parents[child_state] = (n, action)
                         g[child_state] = g[n] + 1
                     else:
                         if g[child_state] > g[n] + 1:
                             g[child_state] = g[n] + 1
-                            parents[child_state] = n
+                            parents[child_state] = (n, action)
 
                             if child_state in closed_list:
                                 closed_list.remove(child_state)
@@ -128,7 +125,7 @@ class Agent:
 
             open_list.remove(n)
             closed_list.add(n)
-            interface.h2(n)
+            interface.h1(n)
 
         print('Path does not exist!')
         return None
