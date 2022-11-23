@@ -66,7 +66,7 @@ class Simulator:
                 if is_horizontal(self.coords, target_cube - 1, target_cube, target_cube + 1):
                     return
                 else:
-                    return self.take_action(target_cube, alpha, axis)
+                    return self.take_action(target_cube, axis, alpha)
 
             if stuck_next:
                 target_cube = cube_id + 1
@@ -75,7 +75,7 @@ class Simulator:
                         ([target_cube, target_cube + 1] not in self.sticky_cubes)
                 ):
                     return
-                return self.take_action(target_cube, alpha, axis)
+                return self.take_action(target_cube, axis, alpha)
 
             if stuck_prev:
                 target_cube = cube_id - 1
@@ -86,7 +86,7 @@ class Simulator:
                     return
                 if not self._changed_alpha:
                     self._changed_alpha = True
-                return self.take_action(target_cube, alpha, axis)
+                return self.take_action(target_cube, axis, alpha)
         else:
             if stuck_prev and stuck_next:
                 return
@@ -116,7 +116,7 @@ class Interface:
                axis: Axis,
                alpha: Rotation) -> None:
         self.check_valid_action(state, cube_id, alpha, axis)
-        state.take_action(cube_id, alpha, axis)
+        state.take_action(cube_id, axis, alpha)
 
     @staticmethod
     def copy_state(state: Simulator) -> Simulator:
