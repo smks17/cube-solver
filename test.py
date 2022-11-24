@@ -14,11 +14,11 @@ for i in range(len(res)):
     ok = True
     try:
         t = time()
-        r = subprocess.run(["python3", r'eval_env.py', str(i)], capture_output=True, timeout=timeout_sec)
+        r = subprocess.run(["python", r'eval_env.py', str(i)], capture_output=True, timeout=timeout_sec)
         if r.returncode != 0: raise "code raised error"
         t = time()-t
         score.append({'problem': i, 'status': 'completed', 'run_time': round(t,4),
-                      'score': 1 / int(str(r.stdout).split(r'\n')[-2].split(r'\r')[0])*1000})
+                      'score': 1 / int(r.stdout.decode().split('\n')[-2].split('\r')[0])*1000})
     except subprocess.TimeoutExpired as e:
         score.append({'problem': i, 'status': 'timeout', 'run_time': float('nan'), 'score': 0})
     except:

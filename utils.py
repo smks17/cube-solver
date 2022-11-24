@@ -24,16 +24,16 @@ for alpha in Rotation:
     TRANSFORM_MATRIX_X[alpha.name] = np.array(
         [[1, 0, 0],
          [0, cos(alpha.degree), sin(alpha.degree)],
-         [0, sin(alpha.degree), cos(alpha.degree)]],
+         [0, - sin(alpha.degree), cos(alpha.degree)]],
         dtype=np.int64)
     TRANSFORM_MATRIX_Y[alpha.name] = np.array(
-        [[cos(alpha.degree), 0, sin(alpha.degree)],
+        [[cos(alpha.degree), 0, - sin(alpha.degree)],
          [0, 1, 0],
          [sin(alpha.degree), 0, cos(alpha.degree)]],
         dtype=np.int64)
     TRANSFORM_MATRIX_Z[alpha.name] = np.array(
         [[cos(alpha.degree), sin(alpha.degree), 0],
-         [sin(alpha.degree), cos(alpha.degree), 0],
+         [- sin(alpha.degree), cos(alpha.degree), 0],
          [0, 0, 1]],
         dtype=np.int64)
 

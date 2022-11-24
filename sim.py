@@ -21,7 +21,10 @@ from utils import (
 class Simulator:
     def __init__(self, coordinates: List, sticky_cubes: List) -> None:
         self.coords = np.array(coordinates)
-        self.sticky_cubes = sticky_cubes
+        if sticky_cubes is None:
+            sticky_cubes = None
+        else:
+            self.sticky_cubes = [[i[0]-1,i[1]-1] for i in sticky_cubes]
         self._changed_alpha = False
         self.h = None
 
@@ -41,7 +44,8 @@ class Simulator:
         self.coords[start_id: end_id + 1, ] = \
             self.coords[center_id] + (transform_matrix @ delta_coords.T).T
 
-    def take_action(self, cube_id: int, alpha: Rotation, axis: Axis) -> None:
+
+    def take_action(self, cube_id: int, axis: Axis, alpha: Rotation) -> None:
         start, end = 0, len(self.coords) - 1
 
         if cube_id == start or cube_id == end:
@@ -152,9 +156,11 @@ class Interface:
                                 pow(y2 - y1, 2) +
                                 pow(z2 - z1, 2) * 1.0)
                     index += 1
-        return res
+        state.h = res
+        # return res
 
     def h2(self, state: Simulator):
+        #! This method is not used
         x_set = len(set([cube[0] for cube in state.coords]))
         y_set = len(set([cube[1] for cube in state.coords]))
         z_set = len(set([cube[2] for cube in state.coords]))
@@ -164,6 +170,7 @@ class Interface:
 
     @staticmethod
     def goal_test(state: Simulator) -> bool:
+        #! This method is not used
         sorted_coords = sorted(state.coords, key=lambda k: [k[0], k[1], k[2]])
         min_coord = sorted_coords[0]
         index = 0

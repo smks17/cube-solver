@@ -5,6 +5,8 @@ from sim import Simulator, Interface
 import json
 
 
+debug = False
+
 class Agent:
     def __init__(self):
         self.predicted_actions = []
@@ -22,7 +24,8 @@ class Agent:
             t0 = time()
             initial_state = Simulator(sensor_data['coordinates'], sensor_data['stick_together'])
             self.predicted_actions = alg(initial_state)
-            print("run time:", time() - t0)
+            if debug:
+                print("run time:", time() - t0)
 
         return self.predicted_actions.pop()
 
@@ -48,23 +51,12 @@ class Agent:
                     if interface.goal_test(child_state):
                         return [action] + node[1]
 
-    # def h(self, state: Simulator):
-    #     coords = state.coords
-    #     res = 0
-    #     for i in range(len(coords)):
-    #         for j in range(len(coords)):
-    #             x1, y1, z1 = coords[i]
-    #             x2, y2, z2 = coords[j]
-    #             res += math.sqrt(math.pow(x2 - x1, 2) +
-    #                              math.pow(y2 - y1, 2) +
-    #                              math.pow(z2 - z1, 2) * 1.0)
-    #     return res
 
     def a_star_algorithm(self, root_game: Simulator):
         interface = Interface()
         gui = Graphics()
 
-        interface.h2(root_game)
+        interface.h1(root_game)
         open_list = {root_game}
         closed_list = set([])
 
@@ -81,23 +73,28 @@ class Agent:
                     n = v
 
             counter += 1
-            print(f"counter: {counter}, g: {g[n]}, h: {n.h}")
+            if debug:
+                print(f"counter: {counter}, g: {g[n]}, h: {n.h}")
             if counter % 100 == 0:
-                gui.display(n, True, True, True)
+                if debug:
+                    gui.display(n, True, True, True)
 
             if n is None:
-                print('Path does not exist!')
+                if debug:
+                    print('Path does not exist!')
                 return None
 
-            if interface.goal_test(n):
+            if n.h == 0:
                 reconst_actions = []
-                gui.display(n, True, True, True)
+                if debug:
+                    gui.display(n, True, True, True)
 
                 while parents[n][0] != n:
                     n, action = parents[n]
                     reconst_actions.append(action)
 
-                print('Path found: {}'.format(reconst_actions))
+                if debug:
+                    print('Path found: {}'.format(reconst_actions))
                 return reconst_actions
 
             actions_list = interface.get_possible_actions(n)
@@ -110,7 +107,7 @@ class Agent:
                 if interface.check_valid_state(child_state):
                     if child_state not in open_list and child_state not in closed_list:
                         open_list.add(child_state)
-                        interface.h2(child_state)
+                        interface.h1(child_state)
                         parents[child_state] = (n, action)
                         g[child_state] = g[n] + 1
                     else:
@@ -121,11 +118,12 @@ class Agent:
                             if child_state in closed_list:
                                 closed_list.remove(child_state)
                                 open_list.add(child_state)
-                                interface.h2(child_state)
+                                interface.h1(child_state)
 
             open_list.remove(n)
             closed_list.add(n)
             interface.h1(n)
 
-        print('Path does not exist!')
+        if debug:
+            print('Path does not exist!')
         return None

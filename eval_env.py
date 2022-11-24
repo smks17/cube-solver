@@ -174,7 +174,6 @@ def test_one_problemset(sample_input_json):
         interface.evolve(game, action)
         if not interface.valid_state(game): raise 'reached invalid state'
         action_count += 1
-    Graphics().display(game, True, True, True)
     return action_count
 
 
